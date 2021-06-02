@@ -9,7 +9,7 @@ using Vintagestory.API.Server;
     Description = "Allows players to perform actions and express themselves in chat",
     Website = "https://github.com/thoralmighty",
     Authors = new[] { "thoralmighty" },
-    Version = "1.0.2")]
+    Version = "1.1.0")]
 
 namespace CandidEmotions
 {
@@ -26,6 +26,8 @@ namespace CandidEmotions
         public override void StartServerSide(ICoreServerAPI api)
         {
             CandidEmotionsConfig config = GetConfig(api);
+
+            EnumChatType announceType = config.announceAsMessage == true ? EnumChatType.OthersMessage : EnumChatType.Notification;
 
             List<string> allActions = new List<string>();
 
@@ -70,7 +72,7 @@ namespace CandidEmotions
                         message = string.Format("{0} hugs {1}", player.PlayerName, args.PopAll());
                     }
 
-                    api.SendMessageToGroup(groupId, " * " + message, EnumChatType.Notification);
+                    api.SendMessageToGroup(groupId, " * " + message, announceType);
                 };
 
                 api.RegisterCommand(cmd);
@@ -118,7 +120,7 @@ namespace CandidEmotions
                     action = string.Join(" ", words);
                 }
 
-                api.SendMessageToGroup(groupId, " * " + player.PlayerName + " " + action, EnumChatType.Notification);
+                api.SendMessageToGroup(groupId, " * " + player.PlayerName + " " + action, announceType);
             };
 
             api.RegisterCommand(me);
