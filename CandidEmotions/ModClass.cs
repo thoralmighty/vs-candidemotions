@@ -6,13 +6,6 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
-[assembly: ModInfo("Candid Emotions",
-    Description = "Allows players to perform actions and express themselves in chat",
-    Website = "https://github.com/thoralmighty",
-    Authors = new[] { "thoralmighty" },
-    Version = "1.1.0",
-    RequiredOnClient = false)]
-
 namespace CandidEmotions
 {
     public class CandidEmotionsMod : ModSystem
