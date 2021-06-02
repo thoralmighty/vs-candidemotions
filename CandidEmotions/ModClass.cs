@@ -114,7 +114,7 @@ namespace CandidEmotions
                 }
 
                 //Replace placeholder and autocorrect if applicable
-                IPlayer nearestPlayer = FindNearestPlayer(api, player);
+                IPlayer nearestPlayer = FindNearestPlayer(config, api, player);
                 IPlayer[] allPlayers = api.World.AllPlayers;
                 string[] words = action.Split(new char[] { ' ' });
 
@@ -165,7 +165,7 @@ namespace CandidEmotions
                 playerMatch = allPlayers.FirstOrDefault(p =>
                     {
                         //ignore too short queries, like "he" for "helloworld"
-                        if (word.Length <= config.minimumCompleteLength && p.PlayerName.Length >= minimumCompleteLength)
+                        if (word.Length <= config.minimumCompleteLength && p.PlayerName.Length >= config.minimumCompleteLength)
                             return false;
                         return p.PlayerName.ToLower().StartsWith(word.ToLower(), StringComparison.CurrentCulture);
                     });
