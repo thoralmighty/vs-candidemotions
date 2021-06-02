@@ -1,0 +1,6 @@
+{
+  "enableHugs": true,
+  "enablePlaceholder": true,
+  "placeholder": "@p",
+  "customActions": []
+}
