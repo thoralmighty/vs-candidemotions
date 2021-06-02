@@ -9,7 +9,7 @@ using Vintagestory.API.Server;
     Description = "Allows players to perform actions and express themselves in chat",
     Website = "https://github.com/thoralmighty",
     Authors = new[] { "thoralmighty" },
-    Version = "1.0.1")]
+    Version = "1.0.2")]
 
 namespace CandidEmotions
 {
@@ -47,14 +47,21 @@ namespace CandidEmotions
 
                     if (otherPlayerName.Length == 0 || otherPlayerName == "@p")
                     {
-                        IPlayer nearestPlayer = api.World.NearestPlayer(player.Entity.ServerPos.X, player.Entity.ServerPos.Y, player.Entity.ServerPos.Z);
+                        IPlayer nearestPlayer = FindNearestPlayer(api, player);
                         if (nearestPlayer != null && nearestPlayer.PlayerName != player.PlayerName)
                         {
                             message = string.Format("{0} {1}s {2}", player.PlayerName, action, nearestPlayer.PlayerName);
                         }
                         else
                         {
-                            api.SendMessage(player, groupId, "There was no one around, so you gave yourself a hug", EnumChatType.Notification);
+                            if (action == "hug")
+                            {
+                                api.SendMessage(player, groupId, "There is no one around, so you give yourself a hug", EnumChatType.Notification);
+                            }
+                            else
+                            {
+                                api.SendMessage(player, groupId, string.Format("There is no one around, so you {0} yourself", action), EnumChatType.Notification);
+                            }
                             return;
                         }
                     }
@@ -92,7 +99,7 @@ namespace CandidEmotions
                 if (action.Contains("@p"))
                 {
                     string[] words = action.Split(new char[] { ' ' });
-                    IPlayer nearestPlayer = api.World.NearestPlayer(player.Entity.ServerPos.X, player.Entity.ServerPos.Y, player.Entity.ServerPos.Z);
+                    IPlayer nearestPlayer = FindNearestPlayer(api, player);
 
                     if (nearestPlayer == null || nearestPlayer.PlayerName == player.PlayerName)
                     {
@@ -115,6 +122,15 @@ namespace CandidEmotions
             };
 
             api.RegisterCommand(me);
+        }
+
+        private IPlayer FindNearestPlayer(ICoreServerAPI api, IServerPlayer player)
+        {
+            var playerPos = player.Entity.ServerPos;
+            IPlayer nearbyPlayer = api.World.GetPlayersAround(player.Entity.ServerPos.XYZ, 30f, 30f, p => p.PlayerName != player.PlayerName)
+                .OrderBy(p => p.Entity.ServerPos.DistanceTo(playerPos.XYZ))
+                .FirstOrDefault();
+            return nearbyPlayer;
         }
 
         private CandidEmotionsConfig GetConfig(ICoreServerAPI api)
