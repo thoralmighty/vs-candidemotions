@@ -73,7 +73,7 @@ namespace CandidEmotions
 
                     try
                     {
-                        message = AutocompleteOrAutocorrectSentence(config, nearestPlayer, allPlayers, message);
+                        message = AutocompleteOrAutocorrectSentence(api, config, nearestPlayer, allPlayers, message);
                     }
                     catch (NoPlayerNearbyException)
                     {
@@ -113,7 +113,7 @@ namespace CandidEmotions
 
                 try
                 {
-                    action = AutocompleteOrAutocorrectSentence(config, nearestPlayer, allPlayers, action);
+                    action = AutocompleteOrAutocorrectSentence(api, config, nearestPlayer, allPlayers, action);
                 }
                 catch (NoPlayerNearbyException)
                 {
@@ -127,56 +127,74 @@ namespace CandidEmotions
             api.RegisterCommand(me);
         }
 
-        private string AutocompleteOrAutocorrectSentence(CandidEmotionsConfig config, IPlayer nearestPlayer, IEnumerable<IPlayer> allPlayers, string fullSentence)
+        private string AutocompleteOrAutocorrectSentence(ICoreServerAPI api, CandidEmotionsConfig config, IPlayer nearestPlayer, IEnumerable<IPlayer> allPlayers, string fullSentence)
         {
-            string[] words = fullSentence.Split(new char[] { ' ' });
-            for (int i = 0; i < words.Length; i++)
+            try
             {
-                words[i] = AutocompleteOrAutocorrect(config, nearestPlayer, allPlayers, words[i]);
+                string[] words = fullSentence.Split(new char[] { ' ' });
+                for (int i = 0; i < words.Length; i++)
+                {
+                    words[i] = AutocompleteOrAutocorrect(api, config, nearestPlayer, allPlayers, words[i], true);
+                }
+                return string.Join(" ", words);
             }
-            return string.Join(" ", words);
+            catch (Exception ex)
+            {
+                api.Logger.Error(string.Format("Unable to autocomplete/autocorrect phrase \"{0}\": {1}", fullSentence, ex));
+                return fullSentence;
+            }
         }
 
-        private string AutocompleteOrAutocorrect(CandidEmotionsConfig config, IPlayer nearestPlayer, IEnumerable<IPlayer> allPlayers, string word)
+        private string AutocompleteOrAutocorrect(ICoreServerAPI api, CandidEmotionsConfig config, IPlayer nearestPlayer, IEnumerable<IPlayer> allPlayers, string word, bool throwExceptions)
         {
-            IPlayer playerMatch = null;
-            IPlayer approxPlayerMatch = null;
+            string originalWord = word;
 
-            //find a player with either a matching username or roughly matching by a certain %
-            if (config.autocorrect == true)
+            try
             {
-                approxPlayerMatch = allPlayers.FirstOrDefault(p =>
+                IPlayer playerMatch = null;
+                IPlayer approxPlayerMatch = null;
+
+                //find a player with either a matching username or roughly matching by a certain %
+                if (config.autocorrect == true)
                 {
-                    return (p.PlayerName.ToLower() == word.ToLower()
-                        || IsFuzzyMatch(config, p.PlayerName.ToLower(), word.ToLower()));
-                });
-            }
-
-            //find a player whose name starts with what the user entered
-            if (config.autocomplete == true)
-            {
-                playerMatch = allPlayers.FirstOrDefault(p =>
+                    approxPlayerMatch = allPlayers.FirstOrDefault(p =>
                     {
-                        //ignore too short queries, like "he" for "helloworld"
-                        if (word.Length <= config.minimumCompleteLength && p.PlayerName.Length >= config.minimumCompleteLength)
-                            return false;
-                        return p.PlayerName.ToLower().StartsWith(word.ToLower(), StringComparison.CurrentCulture);
+                        return (p.PlayerName.ToLower() == word.ToLower()
+                            || IsFuzzyMatch(config, p.PlayerName.ToLower(), word.ToLower()));
                     });
-            }
+                }
 
-            if (word == "@p")
-            {
-                if (nearestPlayer == null)
-                    throw new NoPlayerNearbyException();
-                word = nearestPlayer.PlayerName;
+                //find a player whose name starts with what the user entered
+                if (config.autocomplete == true)
+                {
+                    playerMatch = allPlayers.FirstOrDefault(p =>
+                        {
+                            //ignore too short queries, like "he" for "helloworld"
+                            if (word.Length <= config.minimumCompleteLength && p.PlayerName.Length >= config.minimumCompleteLength)
+                                return false;
+                            return p.PlayerName.ToLower().StartsWith(word.ToLower(), StringComparison.CurrentCulture);
+                        });
+                }
+
+                if (word == "@p")
+                {
+                    if (nearestPlayer == null)
+                        throw new NoPlayerNearbyException();
+                    word = nearestPlayer.PlayerName;
+                }
+                else if (config.autocomplete && playerMatch != null)
+                {
+                    word = playerMatch.PlayerName;
+                }
+                else if (config.autocorrect && approxPlayerMatch != null)
+                {
+                    word = approxPlayerMatch.PlayerName;
+                }
             }
-            else if (config.autocomplete && playerMatch != null)
+            catch (Exception ex)
             {
-                word = playerMatch.PlayerName;
-            }
-            else if (config.autocorrect && approxPlayerMatch != null)
-            {
-                word = approxPlayerMatch.PlayerName;
+                if (throwExceptions) throw;
+                api.Logger.Error(string.Format("Unable to autocomplete/autocorrect word \"{0}\": {1}", originalWord, ex));
             }
 
             return word;
