@@ -2,5 +2,7 @@
   "enableHugs": true,
   "enablePlaceholder": true,
   "placeholder": "@p",
-  "customActions": []
+  "customActions": [],
+  "autocomplete": false,
+  "autocorrect": true
 }

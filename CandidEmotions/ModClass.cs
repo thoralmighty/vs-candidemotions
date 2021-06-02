@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -9,16 +10,13 @@ using Vintagestory.API.Server;
     Description = "Allows players to perform actions and express themselves in chat",
     Website = "https://github.com/thoralmighty",
     Authors = new[] { "thoralmighty" },
-    Version = "1.1.0")]
+    Version = "1.1.0",
+    RequiredOnClient = false)]
 
 namespace CandidEmotions
 {
     public class CandidEmotionsMod : ModSystem
     {
-        public CandidEmotionsMod()
-        {
-        }
-
         public override void Start(ICoreAPI api)
         {
         }
@@ -34,6 +32,9 @@ namespace CandidEmotions
             if (config.enableHugs) allActions.Add("hug");
             if (config.customActions != null) allActions.AddRange(config.customActions);
 
+            /*
+             * Add custom actions as commands with respective handlers
+             */
             foreach (string action in allActions.Distinct())
             {
                 ServerChatCommand cmd = new ServerChatCommand()
@@ -46,16 +47,20 @@ namespace CandidEmotions
                 cmd.handler = delegate (IServerPlayer player, int groupId, CmdArgs args) {
                     string otherPlayerName = args.PopAll().Trim();
                     string message = "";
+                    IPlayer nearestPlayer = FindNearestPlayer(config, api, player);
+                    IPlayer[] allPlayers = api.World.AllPlayers;
 
-                    if (otherPlayerName.Length == 0 || otherPlayerName == "@p")
+                    //if the specified user to perform the action on is not set or is set to the placeholder, get nearest player
+                    if (otherPlayerName.Length == 0 || otherPlayerName == config.placeholder)
                     {
-                        IPlayer nearestPlayer = FindNearestPlayer(api, player);
+                        //if there is another player nearby
                         if (nearestPlayer != null && nearestPlayer.PlayerName != player.PlayerName)
                         {
                             message = string.Format("{0} {1}s {2}", player.PlayerName, action, nearestPlayer.PlayerName);
                         }
                         else
                         {
+                            //if there are no other players nearby
                             if (action == "hug")
                             {
                                 api.SendMessage(player, groupId, "There is no one around, so you give yourself a hug", EnumChatType.Notification);
@@ -69,7 +74,18 @@ namespace CandidEmotions
                     }
                     else
                     {
+                        //perform action on specified player
                         message = string.Format("{0} hugs {1}", player.PlayerName, args.PopAll());
+                    }
+
+                    try
+                    {
+                        message = AutocompleteOrAutocorrectSentence(config, nearestPlayer, allPlayers, message);
+                    }
+                    catch (NoPlayerNearbyException)
+                    {
+                        api.SendMessage(player, groupId, "There is no one here right now", EnumChatType.Notification);
+                        return;
                     }
 
                     api.SendMessageToGroup(groupId, " * " + message, announceType);
@@ -97,27 +113,19 @@ namespace CandidEmotions
                     return;
                 }
 
-                //Replace placeholder if applicable
-                if (action.Contains("@p"))
+                //Replace placeholder and autocorrect if applicable
+                IPlayer nearestPlayer = FindNearestPlayer(api, player);
+                IPlayer[] allPlayers = api.World.AllPlayers;
+                string[] words = action.Split(new char[] { ' ' });
+
+                try
                 {
-                    string[] words = action.Split(new char[] { ' ' });
-                    IPlayer nearestPlayer = FindNearestPlayer(api, player);
-
-                    if (nearestPlayer == null || nearestPlayer.PlayerName == player.PlayerName)
-                    {
-                        api.SendMessage(player, groupId, "There is no one here right now", EnumChatType.Notification);
-                        return;
-                    }
-
-                    for (int i = 0; i < words.Length; i++)
-                    {
-                        if (words[i] == "@p")
-                        {
-                            words[i] = nearestPlayer.PlayerName;
-                        }
-                    }
-
-                    action = string.Join(" ", words);
+                    action = AutocompleteOrAutocorrectSentence(config, nearestPlayer, allPlayers, action);
+                }
+                catch (NoPlayerNearbyException)
+                {
+                    api.SendMessage(player, groupId, "There is no one here right now", EnumChatType.Notification);
+                    return;
                 }
 
                 api.SendMessageToGroup(groupId, " * " + player.PlayerName + " " + action, announceType);
@@ -126,10 +134,80 @@ namespace CandidEmotions
             api.RegisterCommand(me);
         }
 
-        private IPlayer FindNearestPlayer(ICoreServerAPI api, IServerPlayer player)
+        private string AutocompleteOrAutocorrectSentence(CandidEmotionsConfig config, IPlayer nearestPlayer, IEnumerable<IPlayer> allPlayers, string fullSentence)
+        {
+            string[] words = fullSentence.Split(new char[] { ' ' });
+            for (int i = 0; i < words.Length; i++)
+            {
+                words[i] = AutocompleteOrAutocorrect(config, nearestPlayer, allPlayers, words[i]);
+            }
+            return string.Join(" ", words);
+        }
+
+        private string AutocompleteOrAutocorrect(CandidEmotionsConfig config, IPlayer nearestPlayer, IEnumerable<IPlayer> allPlayers, string word)
+        {
+            IPlayer playerMatch = null;
+            IPlayer approxPlayerMatch = null;
+
+            //find a player with either a matching username or roughly matching by a certain %
+            if (config.autocorrect == true)
+            {
+                approxPlayerMatch = allPlayers.FirstOrDefault(p =>
+                {
+                    return (p.PlayerName.ToLower() == word.ToLower()
+                        || IsFuzzyMatch(config, p.PlayerName.ToLower(), word.ToLower()));
+                });
+            }
+
+            //find a player whose name starts with what the user entered
+            if (config.autocomplete == true)
+            {
+                playerMatch = allPlayers.FirstOrDefault(p =>
+                    {
+                        //ignore too short queries, like "he" for "helloworld"
+                        if (word.Length <= config.minimumCompleteLength && p.PlayerName.Length >= minimumCompleteLength)
+                            return false;
+                        return p.PlayerName.ToLower().StartsWith(word.ToLower(), StringComparison.CurrentCulture);
+                    });
+            }
+
+            if (word == "@p")
+            {
+                if (nearestPlayer == null)
+                    throw new NoPlayerNearbyException();
+                word = nearestPlayer.PlayerName;
+            }
+            else if (config.autocomplete && playerMatch != null)
+            {
+                word = playerMatch.PlayerName;
+            }
+            else if (config.autocorrect && approxPlayerMatch != null)
+            {
+                word = approxPlayerMatch.PlayerName;
+            }
+
+            return word;
+        }
+
+        private bool IsFuzzyMatch(CandidEmotionsConfig config, string target, string sample)
+        {
+            char[] target_c = target.ToArray();
+            char[] sample_c = sample.ToArray();
+
+            int match = 0;
+            for (int i = 0; i < sample_c.Length; i++)
+            {
+                if (target_c[i] == sample_c[i])
+                    match++;
+            }
+
+            return (match >= target.Length * config.autocompleteThreshold);
+        }
+
+        private IPlayer FindNearestPlayer(CandidEmotionsConfig config, ICoreServerAPI api, IServerPlayer player)
         {
             var playerPos = player.Entity.ServerPos;
-            IPlayer nearbyPlayer = api.World.GetPlayersAround(player.Entity.ServerPos.XYZ, 30f, 30f, p => p.PlayerName != player.PlayerName)
+            IPlayer nearbyPlayer = api.World.GetPlayersAround(player.Entity.ServerPos.XYZ, config.playerSearchRadius, config.playerSearchRadius, p => p.PlayerName != player.PlayerName)
                 .OrderBy(p => p.Entity.ServerPos.DistanceTo(playerPos.XYZ))
                 .FirstOrDefault();
             return nearbyPlayer;
@@ -147,6 +225,26 @@ namespace CandidEmotions
             {
                 return new CandidEmotionsConfig(); //default
             }
+        }
+    }
+
+    [Serializable]
+    internal class NoPlayerNearbyException : Exception
+    {
+        public NoPlayerNearbyException()
+        {
+        }
+
+        public NoPlayerNearbyException(string message) : base(message)
+        {
+        }
+
+        public NoPlayerNearbyException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        protected NoPlayerNearbyException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
         }
     }
 }
