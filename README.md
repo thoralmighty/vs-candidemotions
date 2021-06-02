@@ -20,7 +20,6 @@ You get:
 ## Command syntax
 
 These are the built-in commands for this mod, but you can add more "hug"-like actions in the configuration.
-```
-/me - Perform an action as yourself, using @p (default) to get a nearby player's name.
-/hug [player] - Built-in action to hug people. If no specific player is specified you will hug whoever is nearby and closest to you.
-```
+
+ * `/me` - Perform an action as yourself, using @p (default) to get a nearby player's name.
+ * `/hug [player]` - Built-in action to hug people. If no specific player is specified you will hug whoever is nearby and closest to you.
