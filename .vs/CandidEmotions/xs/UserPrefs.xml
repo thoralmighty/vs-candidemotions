@@ -1,0 +1,32 @@
+﻿<Properties StartupConfiguration="{D7B344C0-1FFB-4408-A0E5-CABD2E322DC8}|Default">
+  <MonoDevelop.Ide.Workbench ActiveDocument="CandidEmotions/ModClass.cs">
+    <Files>
+      <File FileName="CandidEmotions/ModClass.cs" Line="34" Column="48" />
+      <File FileName="CandidEmotions/launchmod.sh" Line="5" Column="24" />
+      <File FileName="CandidEmotions/RedirectLogs.cs" Line="21" Column="10" />
+      <File FileName="CandidEmotions/CandidEmotionsConfig.cs" Line="8" Column="38" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="CandidEmotions" expanded="True">
+            <Node name="CandidEmotions" expanded="True">
+              <Node name="References" expanded="True" />
+              <Node name="ModClass.cs" selected="True" />
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+      <Pad Id="MonoDevelop.Debugger.WatchPad">
+        <State />
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.ItemProperties.CandidEmotions PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+</Properties>

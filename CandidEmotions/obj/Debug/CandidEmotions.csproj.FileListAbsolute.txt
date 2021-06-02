@@ -1,0 +1,11 @@
+/home/thord/Projects/CandidEmotions/CandidEmotions/obj/Debug/CandidEmotions.csprojAssemblyReference.cache
+/home/thord/Projects/CandidEmotions/CandidEmotions/obj/Debug/CandidEmotions.csproj.CoreCompileInputs.cache
+/home/thord/Projects/CandidEmotions/CandidEmotions/bin/Debug/CandidEmotions.dll
+/home/thord/Projects/CandidEmotions/CandidEmotions/bin/Debug/CandidEmotions.pdb
+/home/thord/Projects/CandidEmotions/CandidEmotions/bin/Debug/VintagestoryAPI.dll
+/home/thord/Projects/CandidEmotions/CandidEmotions/bin/Debug/VintagestoryAPI.xml
+/home/thord/Projects/CandidEmotions/CandidEmotions/obj/Debug/CandidEmotions.csproj.CopyComplete
+/home/thord/Projects/CandidEmotions/CandidEmotions/obj/Debug/CandidEmotions.dll
+/home/thord/Projects/CandidEmotions/CandidEmotions/obj/Debug/CandidEmotions.pdb
+/home/thord/opt/vintagestory/Mods/CandidEmotions.dll
+/home/thord/opt/vintagestory/Mods/CandidEmotions.pdb
