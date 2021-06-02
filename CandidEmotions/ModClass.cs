@@ -14,6 +14,10 @@ namespace CandidEmotions
         {
         }
 
+        /// <summary>
+        /// Code to run when the mod is started.
+        /// </summary>
+        /// <param name="api">API.</param>
         public override void StartServerSide(ICoreServerAPI api)
         {
             CandidEmotionsConfig config = GetConfig(api);
@@ -73,7 +77,7 @@ namespace CandidEmotions
 
                     try
                     {
-                        message = AutocompleteOrAutocorrectSentence(api, config, nearestPlayer, allPlayers, message);
+                        message = AutocompleteOrAutocorrectPhrase(api, config, nearestPlayer, allPlayers, message);
                     }
                     catch (NoPlayerNearbyException)
                     {
@@ -113,7 +117,7 @@ namespace CandidEmotions
 
                 try
                 {
-                    action = AutocompleteOrAutocorrectSentence(api, config, nearestPlayer, allPlayers, action);
+                    action = AutocompleteOrAutocorrectPhrase(api, config, nearestPlayer, allPlayers, action);
                 }
                 catch (NoPlayerNearbyException)
                 {
@@ -127,11 +131,20 @@ namespace CandidEmotions
             api.RegisterCommand(me);
         }
 
-        private string AutocompleteOrAutocorrectSentence(ICoreServerAPI api, CandidEmotionsConfig config, IPlayer nearestPlayer, IEnumerable<IPlayer> allPlayers, string fullSentence)
+        /// <summary>
+        /// Attempts to autocomplete or autocorrect player names in a phrase.
+        /// </summary>
+        /// <returns>The corrected phrase, or as-is if an error occurred.<</returns>
+        /// <param name="api">API.</param>
+        /// <param name="config">Config.</param>
+        /// <param name="nearestPlayer">Nearest player.</param>
+        /// <param name="allPlayers">All players.</param>
+        /// <param name="fullPhrase">Full phrase to work with.</param>
+        private string AutocompleteOrAutocorrectPhrase(ICoreServerAPI api, CandidEmotionsConfig config, IPlayer nearestPlayer, IEnumerable<IPlayer> allPlayers, string fullPhrase)
         {
             try
             {
-                string[] words = fullSentence.Split(new char[] { ' ' });
+                string[] words = fullPhrase.Split(new char[] { ' ' });
                 for (int i = 0; i < words.Length; i++)
                 {
                     words[i] = AutocompleteOrAutocorrect(api, config, nearestPlayer, allPlayers, words[i], true);
@@ -140,11 +153,20 @@ namespace CandidEmotions
             }
             catch (Exception ex)
             {
-                api.Logger.Error(string.Format("Unable to autocomplete/autocorrect phrase \"{0}\": {1}", fullSentence, ex));
-                return fullSentence;
+                api.Logger.Error(string.Format("Unable to autocomplete/autocorrect phrase \"{0}\": {1}", fullPhrase, ex));
+                return fullPhrase;
             }
         }
 
+        /// <summary>
+        /// Attempts to autocomplete or autocorrect a player name in a word.
+        /// </summary>
+        /// <returns>The corrected word, or as-is if an error occurred.</returns>
+        /// <param name="api">API.</param>
+        /// <param name="config">Config.</param>
+        /// <param name="nearestPlayer">Nearest player.</param>
+        /// <param name="allPlayers">All players.</param>
+        /// <param name="word">Single word to work with.</param>
         private string AutocompleteOrAutocorrect(ICoreServerAPI api, CandidEmotionsConfig config, IPlayer nearestPlayer, IEnumerable<IPlayer> allPlayers, string word, bool throwExceptions)
         {
             string originalWord = word;
@@ -200,6 +222,13 @@ namespace CandidEmotions
             return word;
         }
 
+        /// <summary>
+        /// Checks if one word is almost similar to another (e.g. with a typo).
+        /// </summary>
+        /// <returns><c>true</c>, if fuzzy match was found, <c>false</c> otherwise.</returns>
+        /// <param name="config">Config.</param>
+        /// <param name="target">Target word.</param>
+        /// <param name="sample">Sample word (user input).</param>
         private bool IsFuzzyMatch(CandidEmotionsConfig config, string target, string sample)
         {
             sample = sample.Trim();
@@ -226,6 +255,13 @@ namespace CandidEmotions
             }
         }
 
+        /// <summary>
+        /// Finds the nearest player.
+        /// </summary>
+        /// <returns>The nearest player.</returns>
+        /// <param name="config">Config.</param>
+        /// <param name="api">API.</param>
+        /// <param name="player">Player.</param>
         private IPlayer FindNearestPlayer(CandidEmotionsConfig config, ICoreServerAPI api, IServerPlayer player)
         {
             var playerPos = player.Entity.ServerPos;
@@ -235,6 +271,11 @@ namespace CandidEmotions
             return nearbyPlayer;
         }
 
+        /// <summary>
+        /// Gets the config if one is available, otherwise default.
+        /// </summary>
+        /// <returns>The config.</returns>
+        /// <param name="api">API.</param>
         private CandidEmotionsConfig GetConfig(ICoreServerAPI api)
         {
             try
@@ -250,6 +291,9 @@ namespace CandidEmotions
         }
     }
 
+    /// <summary>
+    /// Exception to be thrown when no player was found nearby.
+    /// </summary>
     [Serializable]
     internal class NoPlayerNearbyException : Exception
     {

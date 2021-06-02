@@ -1,5 +1,8 @@
 ﻿namespace CandidEmotions
 {
+    /// <summary>
+    /// CandidEmotions configuration with defaults.
+    /// </summary>
     internal class CandidEmotionsConfig
     {
         public bool enableHugs = true;
