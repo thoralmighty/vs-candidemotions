@@ -8,7 +8,8 @@ using Vintagestory.API.Server;
 [assembly: ModInfo("Candid Emotions",
     Description = "Allows players to perform actions and express themselves in chat",
     Website = "https://github.com/thoralmighty",
-    Authors = new[] { "thoralmighty" })]
+    Authors = new[] { "thoralmighty" },
+    Version = "1.0.1")]
 
 namespace CandidEmotions
 {
@@ -48,9 +49,14 @@ namespace CandidEmotions
                     {
                         IPlayer nearestPlayer = api.World.NearestPlayer(player.Entity.ServerPos.X, player.Entity.ServerPos.Y, player.Entity.ServerPos.Z);
                         if (nearestPlayer != null && nearestPlayer.PlayerName != player.PlayerName)
+                        {
                             message = string.Format("{0} {1}s {2}", player.PlayerName, action, nearestPlayer.PlayerName);
+                        }
                         else
+                        {
                             api.SendMessage(player, groupId, "There was no one around, so you gave yourself a hug", EnumChatType.Notification);
+                            return;
+                        }
                     }
                     else
                     {
@@ -88,7 +94,7 @@ namespace CandidEmotions
                     string[] words = action.Split(new char[] { ' ' });
                     IPlayer nearestPlayer = api.World.NearestPlayer(player.Entity.ServerPos.X, player.Entity.ServerPos.Y, player.Entity.ServerPos.Z);
 
-                    if (nearestPlayer == null)
+                    if (nearestPlayer == null || nearestPlayer.PlayerName == player.PlayerName)
                     {
                         api.SendMessage(player, groupId, "There is no one here right now", EnumChatType.Notification);
                         return;
@@ -115,7 +121,9 @@ namespace CandidEmotions
         {
             try
             {
-                return api.LoadModConfig<CandidEmotionsConfig>("CandidEmotionsConfig");
+                CandidEmotionsConfig cfg = api.LoadModConfig<CandidEmotionsConfig>("CandidEmotionsConfig");
+                if (cfg == null) return new CandidEmotionsConfig();
+                else return cfg;
             }
             catch (Exception)
             {

@@ -40,7 +40,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="launchmod.sh" />
-    <None Include=".gitignore" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
