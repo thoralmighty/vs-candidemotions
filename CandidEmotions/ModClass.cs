@@ -184,17 +184,28 @@ namespace CandidEmotions
 
         private bool IsFuzzyMatch(CandidEmotionsConfig config, string target, string sample)
         {
-            char[] target_c = target.ToArray();
-            char[] sample_c = sample.ToArray();
+            sample = sample.Trim();
+            target = target.Trim();
 
-            int match = 0;
-            for (int i = 0; i < sample_c.Length; i++)
+            //if the sample is the same length as the target or varies by max 2 characters
+            if (target.Length == sample.Length || (Math.Max(target.Length, sample.Length) - Math.Min(target.Length, sample.Length)) <= 2)
             {
-                if (target_c[i] == sample_c[i])
-                    match++;
-            }
+                char[] target_c = target.ToArray();
+                char[] sample_c = sample.ToArray();
 
-            return (match >= target.Length * config.autocompleteThreshold);
+                int match = 0;
+                for (int i = 0; i < Math.Min(target_c.Length, sample_c.Length); i++)
+                {
+                    if (target_c[i] == sample_c[i])
+                        match++;
+                }
+
+                return (match >= target.Length * config.autocompleteThreshold);
+            }
+            else
+            {
+                return false;
+            }
         }
 
         private IPlayer FindNearestPlayer(CandidEmotionsConfig config, ICoreServerAPI api, IServerPlayer player)
