@@ -1,10 +1,11 @@
 ﻿<Properties StartupConfiguration="{D7B344C0-1FFB-4408-A0E5-CABD2E322DC8}|Default">
-  <MonoDevelop.Ide.Workbench ActiveDocument="CandidEmotions/ModClass.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="CandidEmotions/.gitignore">
     <Files>
-      <File FileName="CandidEmotions/ModClass.cs" Line="34" Column="48" />
+      <File FileName="CandidEmotions/ModClass.cs" Line="85" Column="52" />
       <File FileName="CandidEmotions/launchmod.sh" Line="5" Column="24" />
       <File FileName="CandidEmotions/RedirectLogs.cs" Line="21" Column="10" />
-      <File FileName="CandidEmotions/CandidEmotionsConfig.cs" Line="8" Column="38" />
+      <File FileName="CandidEmotions/CandidEmotionsConfig.cs" Line="5" Column="31" />
+      <File FileName="CandidEmotions/.gitignore" Line="3" Column="6" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -12,7 +13,7 @@
           <Node name="CandidEmotions" expanded="True">
             <Node name="CandidEmotions" expanded="True">
               <Node name="References" expanded="True" />
-              <Node name="ModClass.cs" selected="True" />
+              <Node name=".gitignore" selected="True" />
             </Node>
           </Node>
         </State>

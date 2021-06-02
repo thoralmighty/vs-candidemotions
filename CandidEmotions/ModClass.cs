@@ -82,6 +82,29 @@ namespace CandidEmotions
                     return;
                 }
 
+                //Replace placeholder if applicable
+                if (action.Contains("@p"))
+                {
+                    string[] words = action.Split(new char[] { ' ' });
+                    IPlayer nearestPlayer = api.World.NearestPlayer(player.Entity.ServerPos.X, player.Entity.ServerPos.Y, player.Entity.ServerPos.Z);
+
+                    if (nearestPlayer == null)
+                    {
+                        api.SendMessage(player, groupId, "There is no one here right now", EnumChatType.Notification);
+                        return;
+                    }
+
+                    for (int i = 0; i < words.Length; i++)
+                    {
+                        if (words[i] == "@p")
+                        {
+                            words[i] = nearestPlayer.PlayerName;
+                        }
+                    }
+
+                    action = string.Join(" ", words);
+                }
+
                 api.SendMessageToGroup(groupId, " * " + player.PlayerName + " " + action, EnumChatType.Notification);
             };
 
