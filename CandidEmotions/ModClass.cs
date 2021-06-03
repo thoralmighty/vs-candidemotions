@@ -126,7 +126,7 @@ namespace CandidEmotions
 
                 try
                 {
-                    message = AutocompleteOrAutocorrectPhrase(api, config, nearestPlayer, allPlayers, message);
+                    message = AutocompleteOrAutocorrectPhrase(api, nearestPlayer, allPlayers, message);
                 }
                 catch (NoPlayerNearbyException)
                 {
@@ -143,18 +143,17 @@ namespace CandidEmotions
         /// </summary>
         /// <returns>The corrected phrase, or as-is if an error occurred.</returns>
         /// <param name="api">API.</param>
-        /// <param name="config">Config.</param>
         /// <param name="nearestPlayer">Nearest player.</param>
         /// <param name="allPlayers">All players.</param>
         /// <param name="fullPhrase">Full phrase to work with.</param>
-        private string AutocompleteOrAutocorrectPhrase(ICoreServerAPI api, CandidEmotionsConfig config, IPlayer nearestPlayer, IEnumerable<IPlayer> allPlayers, string fullPhrase)
+        private string AutocompleteOrAutocorrectPhrase(ICoreServerAPI api, IPlayer nearestPlayer, IEnumerable<IPlayer> allPlayers, string fullPhrase)
         {
             try
             {
                 string[] words = fullPhrase.Split(new char[] { ' ' });
                 for (int i = 0; i < words.Length; i++)
                 {
-                    words[i] = AutocompleteOrAutocorrect(api, config, nearestPlayer, allPlayers, words[i], true);
+                    words[i] = AutocompleteOrAutocorrect(api, nearestPlayer, allPlayers, words[i], true);
                 }
                 return string.Join(" ", words);
             }
@@ -174,13 +173,14 @@ namespace CandidEmotions
         /// </summary>
         /// <returns>The corrected word, or as-is if an error occurred.</returns>
         /// <param name="api">API.</param>
-        /// <param name="config">Config.</param>
         /// <param name="nearestPlayer">Nearest player.</param>
         /// <param name="allPlayers">All players.</param>
         /// <param name="word">Single word to work with.</param>
-        private string AutocompleteOrAutocorrect(ICoreServerAPI api, CandidEmotionsConfig config, IPlayer nearestPlayer, IEnumerable<IPlayer> allPlayers, string word, bool throwExceptions)
+        private string AutocompleteOrAutocorrect(ICoreServerAPI api, IPlayer nearestPlayer, IEnumerable<IPlayer> allPlayers, string word, bool throwExceptions)
         {
             string originalWord = word;
+
+            if (allPlayers == null) return word;
 
             try
             {
@@ -201,12 +201,12 @@ namespace CandidEmotions
                 if (config.autocomplete == true)
                 {
                     playerMatch = allPlayers.FirstOrDefault(p =>
-                        {
-                            //ignore too short queries, like "he" for "helloworld"
-                            if (word.Length <= config.minimumCompleteLength && p.PlayerName.Length >= config.minimumCompleteLength)
-                                return false;
-                            return p.PlayerName.ToLower().StartsWith(word.ToLower(), StringComparison.CurrentCulture);
-                        });
+                    {
+                        //ignore too short queries, like "he" for "helloworld"
+                        if (word.Length <= config.minimumCompleteLength && p.PlayerName.Length >= config.minimumCompleteLength)
+                            return false;
+                        return p.PlayerName.ToLower().StartsWith(word.ToLower(), StringComparison.CurrentCulture);
+                    });
                 }
 
                 if (word == "@p")
