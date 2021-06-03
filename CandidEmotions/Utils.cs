@@ -17,7 +17,7 @@ namespace CandidEmotions
         public static IPlayer FindNearestPlayer(ICoreServerAPI api, CandidEmotionsConfig config, IServerPlayer player)
         {
             var playerPos = player.Entity.ServerPos;
-            IPlayer nearbyPlayer = api.World.GetPlayersAround(player.Entity.ServerPos.XYZ, config.playerSearchRadius, config.playerSearchRadius, p => p.PlayerName != player.PlayerName)
+            IPlayer nearbyPlayer = api.World.GetPlayersAround(player.Entity.Pos.XYZ, config.playerSearchRadius, config.playerSearchRadius, p => p.PlayerName != player.PlayerName)
                 .OrderBy(p => p.Entity.ServerPos.DistanceTo(playerPos.XYZ))
                 .FirstOrDefault();
             return nearbyPlayer;
@@ -46,7 +46,6 @@ namespace CandidEmotions
         /// Checks if one word is almost similar to another (e.g. with a typo).
         /// </summary>
         /// <returns><c>true</c>, if fuzzy match was found, <c>false</c> otherwise.</returns>
-        /// <param name="config">Config.</param>
         /// <param name="target">Target word.</param>
         /// <param name="sample">Sample word (user input).</param>
         public static bool IsFuzzyMatch(string target, string sample, double autocompleteThreshold)

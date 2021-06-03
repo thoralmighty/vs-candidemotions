@@ -76,6 +76,7 @@ namespace CandidEmotions
 
                 try
                 {
+                    action = ReplacePlaceholder(action, nearestPlayer);
                     action = AutocompleteOrAutocorrectPhrase(api, nearestPlayer, allPlayers, action);
                 }
                 catch (NoPlayerNearbyException)
@@ -126,6 +127,7 @@ namespace CandidEmotions
 
                 try
                 {
+                    message = ReplacePlaceholder(message, nearestPlayer);
                     message = AutocompleteOrAutocorrectPhrase(api, nearestPlayer, allPlayers, message);
                 }
                 catch (NoPlayerNearbyException)
@@ -136,6 +138,30 @@ namespace CandidEmotions
 
                 api.SendMessageToGroup(groupId, " * " + message, config.GetAnnounceType());
             };
+        }
+
+        /// <summary>
+        /// Replaces the placeholder defined in <see cref="CandidEmotionsConfig"/> with the nearest player name.
+        /// </summary>
+        /// <returns>The placeholder.</returns>
+        /// <param name="message">Message.</param>
+        /// <param name="nearestPlayer">Nearest player.</param>
+        private string ReplacePlaceholder(string message, IPlayer nearestPlayer)
+        {
+            string[] words = message.Split(new char[] { ' ' });
+
+            for(int i = 0; i < words.Length; i++)
+            {
+                if (words[i] == config.placeholder)
+                {
+                    if (nearestPlayer != null)
+                        words[i] = nearestPlayer.PlayerName;
+                    else
+                        throw new NoPlayerNearbyException();
+                }
+            }
+
+            return string.Join(" ", words);
         }
 
         /// <summary>
@@ -209,13 +235,7 @@ namespace CandidEmotions
                     });
                 }
 
-                if (word == "@p")
-                {
-                    if (nearestPlayer == null)
-                        throw new NoPlayerNearbyException();
-                    word = nearestPlayer.PlayerName;
-                }
-                else if (config.autocomplete && playerMatch != null)
+                if (config.autocomplete && playerMatch != null)
                 {
                     word = playerMatch.PlayerName;
                 }
