@@ -10,7 +10,7 @@ namespace VSExampleMods
     {
         public override void StartServerSide(ICoreServerAPI api)
         {
-            //     api.Server.Logger.AddListener(OnServerLogEntry);
+            //   api.Server.Logger.AddListener(OnServerLogEntry);
         }
 
         private void OnServerLogEntry(EnumLogType logType, string message, object[] args)
