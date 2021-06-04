@@ -6,11 +6,15 @@ For instructions on how to install it, plaese refer to [the official wiki page](
 
 ## Examples
 
-```/me eats a banana.
- * thoralmighty eats a banana.```
+```
+/me eats a banana.
+ * thoralmighty eats a banana.
+```
 
-```/hug niceplayer
- * thoralmighty hugs niceplayer```
+```
+/hug niceplayer
+ * thoralmighty hugs niceplayer
+```
 
 ## Command syntax
 
