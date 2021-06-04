@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
@@ -12,6 +13,7 @@ namespace CandidEmotions
     public class CandidEmotionsMod : ModSystem
     {
         CandidEmotionsConfig config;
+        String prefix = " * ";
 
         public override void Start(ICoreAPI api)
         {
@@ -25,8 +27,96 @@ namespace CandidEmotions
         {
             config = Utils.GetConfig(api, "CandidEmotionsConfig");
 
-            EnumChatType announceType = config.GetAnnounceType();
+            EnumChatType announceType = config.GetChatEnumType();
 
+            SetupCoreEmotes(api);
+            SetupPoint(api);
+        }
+
+        private void SetupPoint(ICoreServerAPI api)
+        {
+            ServerChatCommand point = new ServerChatCommand()
+            {
+                Command = "point",
+                Description = "Points at an object or point ahead"
+            };
+
+            point.handler = (IServerPlayer player, int groupId, CmdArgs args) => {
+                String message = "";
+
+                if (player.CurrentEntitySelection != null)
+                {
+                    IPlayer targetPlayer = api.World.AllOnlinePlayers.FirstOrDefault(p => p.Entity.EntityId == player.CurrentEntitySelection.Entity.EntityId);
+                    bool isPlayer = targetPlayer != null;
+
+                    if (isPlayer)
+                    {
+                        message = string.Format("{0} points at {1}", player.PlayerName, targetPlayer.PlayerName);
+                    }
+                    else
+                    {
+                        string entityName = player.CurrentEntitySelection.Entity.GetName().ToLower();
+                        message = string.Format("{0} points at {1}", player.PlayerName, entityName);
+
+                        if (player.CurrentEntitySelection.Entity.Pos.DistanceTo(player.Entity.Pos.XYZ) > 50)
+                        {
+                            message += " in the distance";
+                        }
+                        else if (player.CurrentEntitySelection.Entity.Pos.DistanceTo(player.Entity.Pos.XYZ) > 20)
+                        {
+                            message += " nearby";
+                        }
+                    }
+                }
+                else if (player.CurrentBlockSelection != null)
+                {
+                    Block block = api.World.BlockAccessor.GetBlockOrNull(player.CurrentBlockSelection.Position.X, player.CurrentBlockSelection.Position.Y, player.CurrentBlockSelection.Position.Z);
+                    if (block == null)
+                    {
+                        message = string.Format("{0} points in front of them", player.PlayerName);
+                    }
+                    else
+                    {
+                        StringBuilder stringBuilder = new StringBuilder();
+
+                        stringBuilder.Append(string.Format("{0} points at ", player.PlayerName));
+
+                        if (block.BlockMaterial != EnumBlockMaterial.Soil)
+                        {
+                            stringBuilder.Append(block.GetPlacedBlockName(api.World, player.CurrentBlockSelection.Position).ToLower());
+                        }
+                        else
+                        {
+                            stringBuilder.Append("the ground");
+                        }
+
+                        var distance = player.CurrentBlockSelection.Position.DistanceTo(player.Entity.Pos.X, player.Entity.Pos.Y, player.Entity.Pos.Z);
+
+                        if (distance > 50)
+                        {
+                            stringBuilder.Append(" in the distance");
+                        }
+                        else if (distance > 20)
+                        {
+                            stringBuilder.Append(" nearby");
+                        }
+                        else
+                        {
+                            stringBuilder.Append(" in front of them");
+                        }
+
+                        message = stringBuilder.ToString();
+                    }
+                }
+
+                api.SendMessage(player, groupId, prefix + message, config.GetChatEnumType());
+            };
+
+            api.RegisterCommand(point);
+        }
+
+        private void SetupCoreEmotes(ICoreServerAPI api)
+        {
             List<string> allActions = new List<string>();
 
             if (config.enableHugs) allActions.Add("hug");
@@ -85,7 +175,7 @@ namespace CandidEmotions
                     return;
                 }
 
-                api.SendMessageToGroup(groupId, " * " + player.PlayerName + " " + action, config.GetAnnounceType());
+                api.SendMessageToGroup(groupId, prefix + player.PlayerName + " " + action, config.GetChatEnumType());
             };
         }
 
@@ -136,7 +226,7 @@ namespace CandidEmotions
                     return;
                 }
 
-                api.SendMessageToGroup(groupId, " * " + message, config.GetAnnounceType());
+                api.SendMessageToGroup(groupId, prefix + message, config.GetChatEnumType());
             };
         }
 

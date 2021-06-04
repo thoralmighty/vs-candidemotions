@@ -62,7 +62,7 @@ namespace CandidEmotions
         /// Retrieves the chat message type based on whether <see cref="announceAsMessage"/> is true.
         /// </summary>
         /// <returns>The message type.</returns>
-        internal EnumChatType GetAnnounceType()
+        internal EnumChatType GetChatEnumType()
         {
             return announceAsMessage == true ? EnumChatType.OthersMessage : EnumChatType.Notification;
         }
