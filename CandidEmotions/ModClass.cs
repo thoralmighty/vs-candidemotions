@@ -13,7 +13,6 @@ namespace CandidEmotions
     public class CandidEmotionsMod : ModSystem
     {
         CandidEmotionsConfig config;
-        String prefix = " * ";
 
         public override void Start(ICoreAPI api)
         {
@@ -109,7 +108,7 @@ namespace CandidEmotions
                     }
                 }
 
-                api.SendMessage(player, groupId, prefix + message, config.GetChatEnumType());
+                api.SendMessage(player, groupId, config.GetPrefix() + message, config.GetChatEnumType());
             };
 
             api.RegisterCommand(point);
@@ -175,7 +174,7 @@ namespace CandidEmotions
                     return;
                 }
 
-                api.SendMessageToGroup(groupId, prefix + player.PlayerName + " " + action, config.GetChatEnumType());
+                api.SendMessageToGroup(groupId, config.GetPrefix() + player.PlayerName + " " + action, config.GetChatEnumType());
             };
         }
 
@@ -226,7 +225,7 @@ namespace CandidEmotions
                     return;
                 }
 
-                api.SendMessageToGroup(groupId, prefix + message, config.GetChatEnumType());
+                api.SendMessageToGroup(groupId, config.GetPrefix() + message, config.GetChatEnumType());
             };
         }
 

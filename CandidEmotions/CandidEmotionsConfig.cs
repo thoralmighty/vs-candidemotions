@@ -59,12 +59,26 @@ namespace CandidEmotions
         public double autocompleteThreshold = 0.7;
 
         /// <summary>
+        /// The prefix to place before actions in the chat.
+        /// </summary>
+        public string prefix = "*";
+
+        /// <summary>
         /// Retrieves the chat message type based on whether <see cref="announceAsMessage"/> is true.
         /// </summary>
         /// <returns>The message type.</returns>
         internal EnumChatType GetChatEnumType()
         {
             return announceAsMessage == true ? EnumChatType.OthersMessage : EnumChatType.Notification;
+        }
+
+        /// <summary>
+        /// Gets the prefix to be used in chat.
+        /// </summary>
+        /// <returns>The prefix.</returns>
+        internal string GetPrefix()
+        {
+            return string.Format(" {0} ", prefix);
         }
     }
 }
