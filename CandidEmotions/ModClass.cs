@@ -318,21 +318,13 @@ namespace CandidEmotions
 
             if (allPlayers == null) return word;
 
+            //failsafe null check
+            allPlayers = allPlayers.Where(p => p != null);
+
             try
             {
                 IPlayer playerMatch = null;
                 IPlayer approxPlayerMatch = null;
-
-                //find a player with either a matching username or roughly matching by a certain %
-                if (config.autocorrect == true)
-                {
-                    approxPlayerMatch = allPlayers.FirstOrDefault(p =>
-                    {
-                        return (p.PlayerName.ToLower() == word.ToLower()
-                            || Utils.IsFuzzyMatch(p.PlayerName.ToLower(), word.ToLower(), config.autocompleteThreshold));
-                    });
-                }
-
                 //find a player whose name starts with what the user entered
                 if (config.autocomplete == true)
                 {
@@ -342,6 +334,16 @@ namespace CandidEmotions
                         if (word.Length <= config.minimumCompleteLength && p.PlayerName.Length >= config.minimumCompleteLength)
                             return false;
                         return p.PlayerName.ToLower().StartsWith(word.ToLower(), StringComparison.CurrentCulture);
+                    });
+                }
+
+                //find a player with either a matching username or roughly matching by a certain %
+                if (config.autocorrect == true)
+                {
+                    approxPlayerMatch = allPlayers.FirstOrDefault(p =>
+                    {
+                        return (p.PlayerName.ToLower() == word.ToLower()
+                            || Utils.IsFuzzyMatch(p.PlayerName.ToLower(), word.ToLower(), config.autocompleteThreshold));
                     });
                 }
 
