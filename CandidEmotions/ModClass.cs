@@ -16,6 +16,7 @@ namespace CandidEmotions
 
         public override void Start(ICoreAPI api)
         {
+            config = Utils.GetConfig(api, "CandidEmotionsConfig");
         }
 
         /// <summary>
@@ -24,12 +25,19 @@ namespace CandidEmotions
         /// <param name="api">API.</param>
         public override void StartServerSide(ICoreServerAPI api)
         {
-            config = Utils.GetConfig(api, "CandidEmotionsConfig");
-
             EnumChatType announceType = config.GetChatEnumType();
 
             SetupCoreEmotes(api);
             SetupPoint(api);
+
+            api.RegisterCommand(new ServerChatCommand()
+            {
+                Command = "emote",
+                handler = (IServerPlayer player, int groupId, CmdArgs args) =>
+                {
+                    api.SendMessage(player, groupId, "Oh, it worked", EnumChatType.CommandSuccess);
+                }
+            });
         }
 
         private void SetupPoint(ICoreServerAPI api)
@@ -80,7 +88,20 @@ namespace CandidEmotions
 
                         stringBuilder.Append(string.Format("{0} points at ", player.PlayerName));
 
-                        if (block.BlockMaterial != EnumBlockMaterial.Soil)
+                        EnumBlockMaterial[] ignoreMaterials = new EnumBlockMaterial[]
+                        {
+                            EnumBlockMaterial.Air,
+                            EnumBlockMaterial.Gravel,
+                            EnumBlockMaterial.Leaves,
+                            EnumBlockMaterial.Ice,
+                            EnumBlockMaterial.Sand,
+                            EnumBlockMaterial.Snow, 
+                            EnumBlockMaterial.Soil,
+                            EnumBlockMaterial.Stone,
+                            EnumBlockMaterial.Wood
+                        };
+
+                        if (!ignoreMaterials.Contains(block.BlockMaterial))
                         {
                             stringBuilder.Append(block.GetPlacedBlockName(api.World, player.CurrentBlockSelection.Position).ToLower());
                         }
@@ -99,13 +120,13 @@ namespace CandidEmotions
                         {
                             stringBuilder.Append(" nearby");
                         }
-                        else
-                        {
-                            stringBuilder.Append(" in front of them");
-                        }
 
                         message = stringBuilder.ToString();
                     }
+                }
+                else
+                {
+                    return;
                 }
 
                 api.SendMessage(player, groupId, config.GetPrefix() + message, config.GetChatEnumType());

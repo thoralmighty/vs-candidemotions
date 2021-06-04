@@ -28,7 +28,7 @@ namespace CandidEmotions
         /// </summary>
         /// <returns>The config.</returns>
         /// <param name="api">API.</param>
-        public static CandidEmotionsConfig GetConfig(ICoreServerAPI api, string configName)
+        public static CandidEmotionsConfig GetConfig(ICoreAPI api, string configName)
         {
             try
             {
