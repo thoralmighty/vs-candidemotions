@@ -6,17 +6,11 @@ For instructions on how to install it, plaese refer to [the official wiki page](
 
 ## Examples
 
-If you say:
-`/me eats a banana.`
+```/me eats a banana.
+ * thoralmighty eats a banana.```
 
-You get:
-` * thoralmighty eats a banana.`
-
-If you say:
-`/hug niceplayer`
-
-You get:
-` * thoralmighty hugs niceplayer`
+```/hug niceplayer
+ * thoralmighty hugs niceplayer```
 
 ## Command syntax
 
@@ -24,3 +18,4 @@ These are the built-in commands for this mod, but you can add more "hug"-like ac
 
  * `/me` - Perform an action as yourself, using @p (default) to get a nearby player's name.
  * `/hug [player]` - Built-in action to hug people. If no specific player is specified you will hug whoever is nearby and closest to you.
+ * `/point` - Built-in action for pointing to things you're looking at.
