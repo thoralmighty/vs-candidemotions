@@ -39,6 +39,7 @@
     <Compile Include="CandidEmotionsConfig.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="NoPlayerNearbyException.cs" />
+    <Compile Include="AutoCorrector.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="launchmod.sh" />

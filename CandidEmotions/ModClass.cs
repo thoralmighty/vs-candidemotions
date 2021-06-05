@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
@@ -14,10 +13,13 @@ namespace CandidEmotions
     public class CandidEmotionsMod : ModSystem
     {
         CandidEmotionsConfig config;
+        AutoCorrector corrector;
 
+        #region Initialization
         public override void Start(ICoreAPI api)
         {
             config = Utils.GetConfig(api, "CandidEmotionsConfig");
+            corrector = new AutoCorrector(config);
         }
 
         /// <summary>
@@ -54,6 +56,8 @@ namespace CandidEmotions
 
                 if (player.CurrentEntitySelection != null)
                 {
+                    corrector.Refresh(api);
+
                     IPlayer targetPlayer = api.World.AllOnlinePlayers.FirstOrDefault(p => p.Entity.EntityId == player.CurrentEntitySelection.Entity.EntityId);
                     bool isPlayer = targetPlayer != null;
 
@@ -135,6 +139,7 @@ namespace CandidEmotions
 
             api.RegisterCommand(point);
         }
+        #endregion
 
         private void SetupCoreEmotes(ICoreServerAPI api)
         {
@@ -186,18 +191,20 @@ namespace CandidEmotions
                 string[] words = action.Split(new char[] { ' ' });
 
                 try
-                {
-                    action = ReplacePlaceholder(action, nearestPlayer);
-                    action = AutocompleteOrAutocorrectPhrase(api, nearestPlayer, allPlayers, action);
+                { 
+                    action = RequestAutoCorrection(action, nearestPlayer);
+                    api.SendMessageToGroup(groupId, config.GetPrefix() + player.PlayerName + " " + action, config.GetChatEnumType());
                 }
                 catch (NoPlayerNearbyException)
                 {
                     api.SendMessage(player, groupId, "There is no one here right now", EnumChatType.Notification);
-                    return;
                 }
-
-                api.SendMessageToGroup(groupId, config.GetPrefix() + player.PlayerName + " " + action, config.GetChatEnumType());
             };
+        }
+
+        private void Error(ICoreAPI api, string v)
+        {
+            api.Logger.Error("(CandidEmotions) " + v);
         }
 
         private ServerChatCommandDelegate GetHandlerDelegate(ICoreServerAPI api, string action)
@@ -238,136 +245,21 @@ namespace CandidEmotions
 
                 try
                 {
-                    message = ReplacePlaceholder(message, nearestPlayer);
-                    message = AutocompleteOrAutocorrectPhrase(api, nearestPlayer, allPlayers, message);
+                    message = RequestAutoCorrection(message, nearestPlayer);
+                    api.SendMessageToGroup(groupId, config.GetPrefix() + message, config.GetChatEnumType());
                 }
                 catch (NoPlayerNearbyException)
                 {
                     api.SendMessage(player, groupId, "There is no one here right now", EnumChatType.Notification);
-                    return;
                 }
-
-                api.SendMessageToGroup(groupId, config.GetPrefix() + message, config.GetChatEnumType());
             };
         }
 
-        /// <summary>
-        /// Replaces the placeholder defined in <see cref="CandidEmotionsConfig"/> with the nearest player name.
-        /// </summary>
-        /// <returns>The placeholder.</returns>
-        /// <param name="message">Message.</param>
-        /// <param name="nearestPlayer">Nearest player.</param>
-        private string ReplacePlaceholder(string message, IPlayer nearestPlayer)
+        private string RequestAutoCorrection(string input, IPlayer nearestPlayer)
         {
-            string[] words = message.Split(new char[] { ' ' });
-
-            for(int i = 0; i < words.Length; i++)
-            {
-                if (words[i] == config.placeholder)
-                {
-                    if (nearestPlayer != null)
-                        words[i] = nearestPlayer.PlayerName;
-                    else
-                        throw new NoPlayerNearbyException();
-                }
-            }
-
-            return string.Join(" ", words);
-        }
-
-        /// <summary>
-        /// Attempts to autocomplete or autocorrect player names in a phrase.
-        /// </summary>
-        /// <returns>The corrected phrase, or as-is if an error occurred.</returns>
-        /// <param name="api">API.</param>
-        /// <param name="nearestPlayer">Nearest player.</param>
-        /// <param name="allPlayers">All players.</param>
-        /// <param name="fullPhrase">Full phrase to work with.</param>
-        private string AutocompleteOrAutocorrectPhrase(ICoreServerAPI api, IPlayer nearestPlayer, IEnumerable<IPlayer> allPlayers, string fullPhrase)
-        {
-            try
-            {
-                string[] words = fullPhrase.Split(new char[] { ' ' });
-                for (int i = 0; i < words.Length; i++)
-                {
-                    words[i] = AutocompleteOrAutocorrect(api, nearestPlayer, allPlayers, words[i], true);
-                }
-                return string.Join(" ", words);
-            }
-            catch (NoPlayerNearbyException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                api.Logger.Error(string.Format("Unable to autocomplete/autocorrect phrase \"{0}\": {1}", fullPhrase, ex));
-                return fullPhrase;
-            }
-        }
-
-        /// <summary>
-        /// Attempts to autocomplete or autocorrect a player name in a word.
-        /// </summary>
-        /// <returns>The corrected word, or as-is if an error occurred.</returns>
-        /// <param name="api">API.</param>
-        /// <param name="nearestPlayer">Nearest player.</param>
-        /// <param name="allPlayers">All players.</param>
-        /// <param name="word">Single word to work with.</param>
-        private string AutocompleteOrAutocorrect(ICoreServerAPI api, IPlayer nearestPlayer, IEnumerable<IPlayer> allPlayers, string word, bool throwExceptions)
-        {
-            string originalWord = word;
-
-            if (allPlayers == null || word == null) return word;
-
-            //failsafe null check
-            allPlayers = allPlayers.Where(p => p != null);
-
-            try
-            {
-                IPlayer playerMatch = null;
-                IPlayer approxPlayerMatch = null;
-                //find a player whose name starts with what the user entered
-                if (config.autocomplete == true)
-                {
-                    playerMatch = allPlayers.FirstOrDefault(p =>
-                    {
-                        //ignore too short queries, like "he" for "helloworld"
-                        if (word.Length <= config.minimumCompleteLength && p.PlayerName.Length >= config.minimumCompleteLength)
-                            return false;
-                        return p.PlayerName.ToLower().StartsWith(word.ToLower(), StringComparison.CurrentCulture);
-                    });
-                }
-
-                //find a player with either a matching username or roughly matching by a certain %
-                if (config.autocorrect == true)
-                {
-                    approxPlayerMatch = allPlayers.FirstOrDefault(p =>
-                    {
-                        return (p.PlayerName.ToLower() == word.ToLower()
-                            || Utils.IsFuzzyMatch(p.PlayerName.ToLower(), word.ToLower(), config.autocompleteThreshold));
-                    });
-                }
-                    
-                if (config.autocomplete && playerMatch != null)
-                {
-                    word = playerMatch.PlayerName;
-                }
-                else if (config.autocorrect && approxPlayerMatch != null)
-                {
-                    word = approxPlayerMatch.PlayerName;
-                }
-            }
-            catch (NoPlayerNearbyException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                if (throwExceptions) throw; //skip the following log output and defer to catch in AutocompleteOrAutocorrectPhrase
-                api.Logger.Error(string.Format("Unable to autocomplete/autocorrect word \"{0}\": {1}", originalWord, ex));
-            }
-
-            return word;
+            input = Utils.ReplacePlaceholder(input, config.placeholder, nearestPlayer);
+            input = corrector.Process(input, nearestPlayer);
+            return input;
         }
     }
 }

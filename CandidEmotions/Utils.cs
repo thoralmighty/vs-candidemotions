@@ -79,5 +79,29 @@ namespace CandidEmotions
                 return false;
             }
         }
+
+        /// <summary>
+        /// Replaces the placeholder defined in <see cref="CandidEmotionsConfig"/> with the nearest player name.
+        /// </summary>
+        /// <returns>The placeholder.</returns>
+        /// <param name="message">Message.</param>
+        /// <param name="nearestPlayer">Nearest player.</param>
+        public static string ReplacePlaceholder(string message, string placeholder, IPlayer nearestPlayer)
+        {
+            string[] words = message.Split(new char[] { ' ' });
+
+            for (int i = 0; i < words.Length; i++)
+            {
+                if (words[i]?.Trim() == placeholder)
+                {
+                    if (nearestPlayer != null)
+                        words[i] = nearestPlayer.PlayerName;
+                    else
+                        throw new NoPlayerNearbyException();
+                }
+            }
+
+            return string.Join(" ", words);
+        }
     }
 }
