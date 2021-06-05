@@ -2,7 +2,7 @@
 
 This is a mod for [Vintage Story](https://www.vintagestory.at/) that lets players perform chat actions to express themselves ✨
 
-For instructions on how to install it, plaese refer to [the official wiki page](https://wiki.vintagestory.at/index.php?title=Adding_mods) on installing mods.
+For instructions on how to install it, please refer to [the official wiki page](https://wiki.vintagestory.at/index.php?title=Adding_mods) on installing mods.
 
 ## Examples
 
