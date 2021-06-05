@@ -34,7 +34,7 @@ namespace CandidEmotions
             {
                 CandidEmotionsConfig cfg = api.LoadModConfig<CandidEmotionsConfig>(configName);
                 if (cfg == null) return new CandidEmotionsConfig();
-                else return cfg;
+                return cfg;
             }
             catch (Exception)
             {
@@ -50,6 +50,12 @@ namespace CandidEmotions
         /// <param name="sample">Sample word (user input).</param>
         public static bool IsFuzzyMatch(string target, string sample, double autocompleteThreshold)
         {
+            if (target == sample)
+                return true;
+
+            if (target == null || sample == null)
+                return false;
+
             sample = sample.Trim();
             target = target.Trim();
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
@@ -316,7 +317,7 @@ namespace CandidEmotions
         {
             string originalWord = word;
 
-            if (allPlayers == null) return word;
+            if (allPlayers == null || word == null) return word;
 
             //failsafe null check
             allPlayers = allPlayers.Where(p => p != null);
@@ -346,7 +347,7 @@ namespace CandidEmotions
                             || Utils.IsFuzzyMatch(p.PlayerName.ToLower(), word.ToLower(), config.autocompleteThreshold));
                     });
                 }
-
+                    
                 if (config.autocomplete && playerMatch != null)
                 {
                     word = playerMatch.PlayerName;
@@ -362,7 +363,7 @@ namespace CandidEmotions
             }
             catch (Exception ex)
             {
-                if (throwExceptions) throw;
+                if (throwExceptions) throw; //skip the following log output and defer to catch in AutocompleteOrAutocorrectPhrase
                 api.Logger.Error(string.Format("Unable to autocomplete/autocorrect word \"{0}\": {1}", originalWord, ex));
             }
 
