@@ -54,10 +54,10 @@ namespace CandidEmotions
             point.handler = (IServerPlayer player, int groupId, CmdArgs args) => {
                 String message = "";
 
+                corrector.Refresh(api);
+
                 if (player.CurrentEntitySelection != null)
                 {
-                    corrector.Refresh(api);
-
                     IPlayer targetPlayer = api.World.AllOnlinePlayers.FirstOrDefault(p => p.Entity.EntityId == player.CurrentEntitySelection.Entity.EntityId);
                     bool isPlayer = targetPlayer != null;
 
@@ -179,6 +179,8 @@ namespace CandidEmotions
             return delegate (IServerPlayer player, int groupId, CmdArgs args) {
                 string action = args.PopAll().Trim();
 
+                corrector.Refresh(api);
+
                 if (action.Length == 0)
                 {
                     api.SendMessage(player, groupId, "Need to provide an action", EnumChatType.Notification);
@@ -214,6 +216,8 @@ namespace CandidEmotions
                 string message = "";
                 IPlayer nearestPlayer = Utils.FindNearestPlayer(api, config, player);
                 IPlayer[] allPlayers = api.World.AllPlayers;
+
+                corrector.Refresh(api);
 
                 //if the specified user to perform the action on is not set or is set to the placeholder, get nearest player
                 if (otherPlayerName.Length == 0 || otherPlayerName == config.placeholder)
