@@ -32,15 +32,6 @@ namespace CandidEmotions
 
             SetupCoreEmotes(api);
             SetupPoint(api);
-
-            api.RegisterCommand(new ServerChatCommand()
-            {
-                Command = "emote",
-                handler = (IServerPlayer player, int groupId, CmdArgs args) =>
-                {
-                    api.SendMessage(player, groupId, "Oh, it worked", EnumChatType.CommandSuccess);
-                }
-            });
         }
 
         private void SetupPoint(ICoreServerAPI api)
