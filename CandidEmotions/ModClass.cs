@@ -61,11 +61,11 @@ namespace CandidEmotions
                         string entityName = player.CurrentEntitySelection.Entity.GetName().ToLower();
                         message = string.Format("{0} points at {1}", player.PlayerName, entityName);
 
-                        if (player.CurrentEntitySelection.Entity.Pos.DistanceTo(player.Entity.Pos.XYZ) > 50)
+                        if (player.CurrentEntitySelection.Entity.Pos.DistanceTo(player.Entity.Pos.XYZ) > 20)
                         {
                             message += " in the distance";
                         }
-                        else if (player.CurrentEntitySelection.Entity.Pos.DistanceTo(player.Entity.Pos.XYZ) > 20)
+                        else if (player.CurrentEntitySelection.Entity.Pos.DistanceTo(player.Entity.Pos.XYZ) > 10)
                         {
                             message += " nearby";
                         }
@@ -74,36 +74,49 @@ namespace CandidEmotions
                 else if (player.CurrentBlockSelection != null)
                 {
                     Block block = api.World.BlockAccessor.GetBlockOrNull(player.CurrentBlockSelection.Position.X, player.CurrentBlockSelection.Position.Y, player.CurrentBlockSelection.Position.Z);
-                    if (block == null)
+                    BlockEntity blockEntity = api.World.BlockAccessor.GetBlockEntity(player.CurrentBlockSelection.Position);
+
+                    if (block == null && blockEntity == null)
                     {
+                        //neither a block or an entity
                         message = string.Format("{0} points in front of them", player.PlayerName);
                     }
-                    else
+                    else if (blockEntity != null)
                     {
+                        //block entity (chest, cooking pot etc)
+                        message = string.Format("{0} points at the {1}", player.PlayerName, blockEntity.Block.GetPlacedBlockName(api.World, player.CurrentBlockSelection.Position).ToLower());
+                    }
+                    else if (block != null)
+                    {
+                        //normal block
                         StringBuilder stringBuilder = new StringBuilder();
 
-                        stringBuilder.Append(string.Format("{0} points at ", player.PlayerName));
+                        stringBuilder.Append(string.Format("{0} points ", player.PlayerName));
 
-                        EnumBlockMaterial[] ignoreMaterials = new EnumBlockMaterial[]
+                        EnumBlockMaterial[] groundMaterials = new EnumBlockMaterial[]
                         {
                             EnumBlockMaterial.Air,
                             EnumBlockMaterial.Gravel,
                             EnumBlockMaterial.Leaves,
                             EnumBlockMaterial.Ice,
                             EnumBlockMaterial.Sand,
-                            EnumBlockMaterial.Snow, 
+                            EnumBlockMaterial.Snow,
                             EnumBlockMaterial.Soil,
                             EnumBlockMaterial.Stone,
                             EnumBlockMaterial.Wood
                         };
 
-                        if (!ignoreMaterials.Contains(block.BlockMaterial))
+                        if (!groundMaterials.Contains(block.BlockMaterial))
                         {
-                            stringBuilder.Append(block.GetPlacedBlockName(api.World, player.CurrentBlockSelection.Position).ToLower());
+                            stringBuilder.Append("at " + block.GetPlacedBlockName(api.World, player.CurrentBlockSelection.Position).ToLower());
+                        }
+                        else if (block.BlockMaterial == EnumBlockMaterial.Air)
+                        {
+                            stringBuilder.Append("into thin air");
                         }
                         else
                         {
-                            stringBuilder.Append("the ground");
+                            stringBuilder.Append("at the ground");
                         }
 
                         var distance = player.CurrentBlockSelection.Position.DistanceTo(player.Entity.Pos.X, player.Entity.Pos.Y, player.Entity.Pos.Z);
