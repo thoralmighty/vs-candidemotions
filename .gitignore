@@ -135,5 +135,4 @@ $RECYCLE.BIN/
 .DS_Store
 
 _NCrunch*
-/CandidEmotions/VintagestoryAPI.dll
-CandidEmotions/CandidEmotions.dll
+*.dll
