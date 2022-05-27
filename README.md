@@ -4,6 +4,8 @@ This is a mod for [Vintage Story](https://www.vintagestory.at/) that lets player
 
 For instructions on how to install it, please refer to [the official wiki page](https://wiki.vintagestory.at/index.php?title=Adding_mods) on installing mods.
 
+Now also available at the [Vintage Story Mod DB](https://mods.vintagestory.at/show/mod/3275)!
+
 ## Examples
 
 ```
