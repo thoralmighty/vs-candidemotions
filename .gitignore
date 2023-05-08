@@ -136,3 +136,5 @@ $RECYCLE.BIN/
 
 _NCrunch*
 *.dll
+
+.vs/
