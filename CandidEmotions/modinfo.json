@@ -2,7 +2,7 @@
   "type": "code",
   "name": "CandidEmotions",
   "modid": "candidemotions",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "side": "server",
 
   "description": "Allows players to perform actions and express themselves in chat",
@@ -10,6 +10,6 @@
   "authors": [ "thoralmighty" ],
 
   "dependencies": {
-    "game": "1.16.5"
+    "game": "1.18.1"
   }
 }

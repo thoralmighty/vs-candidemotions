@@ -14,7 +14,7 @@ namespace CandidEmotions
         /// <param name="config">Config.</param>
         /// <param name="api">API.</param>
         /// <param name="player">Player.</param>
-        public static IPlayer FindNearestPlayer(ICoreServerAPI api, CandidEmotionsConfig config, IServerPlayer player)
+        public static IPlayer FindNearestPlayer(ICoreServerAPI api, CandidEmotionsConfig config, IPlayer player)
         {
             var playerPos = player.Entity.ServerPos;
             IPlayer nearbyPlayer = api.World.GetPlayersAround(player.Entity.Pos.XYZ, config.playerSearchRadius, config.playerSearchRadius, p => p.PlayerName != player.PlayerName)

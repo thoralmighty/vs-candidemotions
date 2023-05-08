@@ -28,120 +28,119 @@ namespace CandidEmotions
         /// <param name="api">API.</param>
         public override void StartServerSide(ICoreServerAPI api)
         {
-            EnumChatType announceType = config.GetChatEnumType();
-
             SetupCoreEmotes(api);
             SetupPoint(api);
         }
 
         private void SetupPoint(ICoreServerAPI api)
         {
-            ServerChatCommand point = new ServerChatCommand()
-            {
-                Command = "point",
-                Description = "Points at an object or point ahead"
-            };
-
-            point.handler = (IServerPlayer player, int groupId, CmdArgs args) => {
-                String message = "";
-
-                corrector.Refresh(api);
-
-                if (player.CurrentEntitySelection != null)
+            var point = api.ChatCommands.Create()
+                .WithName("point")
+                .RequiresPrivilege(Privilege.chat)
+                .RequiresPlayer()
+                .WithDescription("Points at an object or point ahead")
+                .HandleWith((TextCommandCallingArgs args) =>
                 {
-                    IPlayer targetPlayer = api.World.AllOnlinePlayers.FirstOrDefault(p => p.Entity.EntityId == player.CurrentEntitySelection.Entity.EntityId);
-                    bool isPlayer = targetPlayer != null;
+                    string message = "";
+                    var player = args.Caller.Player;
+                    var groupId = args.Caller.FromChatGroupId;
 
-                    if (isPlayer)
+                    corrector.Refresh(api);
+
+                    if (player.CurrentEntitySelection != null)
                     {
-                        message = string.Format("{0} points at {1}", player.PlayerName, targetPlayer.PlayerName);
-                    }
-                    else
-                    {
-                        string entityName = player.CurrentEntitySelection.Entity.GetName().ToLower();
-                        message = string.Format("{0} points at {1}", player.PlayerName, entityName);
+                        IPlayer targetPlayer = api.World.AllOnlinePlayers.FirstOrDefault(p => p.Entity.EntityId == player.CurrentEntitySelection.Entity.EntityId);
+                        bool isPlayer = targetPlayer != null;
 
-                        if (player.CurrentEntitySelection.Entity.Pos.DistanceTo(player.Entity.Pos.XYZ) > 20)
+                        if (isPlayer)
                         {
-                            message += " in the distance";
-                        }
-                        else if (player.CurrentEntitySelection.Entity.Pos.DistanceTo(player.Entity.Pos.XYZ) > 10)
-                        {
-                            message += " nearby";
-                        }
-                    }
-                }
-                else if (player.CurrentBlockSelection != null)
-                {
-                    Block block = api.World.BlockAccessor.GetBlockOrNull(player.CurrentBlockSelection.Position.X, player.CurrentBlockSelection.Position.Y, player.CurrentBlockSelection.Position.Z);
-                    BlockEntity blockEntity = api.World.BlockAccessor.GetBlockEntity(player.CurrentBlockSelection.Position);
-
-                    if (block == null && blockEntity == null)
-                    {
-                        //neither a block or an entity
-                        message = string.Format("{0} points in front of them", player.PlayerName);
-                    }
-                    else if (blockEntity != null)
-                    {
-                        //block entity (chest, cooking pot etc)
-                        message = string.Format("{0} points at the {1}", player.PlayerName, blockEntity.Block.GetPlacedBlockName(api.World, player.CurrentBlockSelection.Position).ToLower());
-                    }
-                    else if (block != null)
-                    {
-                        //normal block
-                        StringBuilder stringBuilder = new StringBuilder();
-
-                        stringBuilder.Append(string.Format("{0} points ", player.PlayerName));
-
-                        EnumBlockMaterial[] groundMaterials = new EnumBlockMaterial[]
-                        {
-                            EnumBlockMaterial.Air,
-                            EnumBlockMaterial.Gravel,
-                            EnumBlockMaterial.Leaves,
-                            EnumBlockMaterial.Ice,
-                            EnumBlockMaterial.Sand,
-                            EnumBlockMaterial.Snow,
-                            EnumBlockMaterial.Soil,
-                            EnumBlockMaterial.Stone,
-                            EnumBlockMaterial.Wood
-                        };
-
-                        if (!groundMaterials.Contains(block.BlockMaterial))
-                        {
-                            stringBuilder.Append("at " + block.GetPlacedBlockName(api.World, player.CurrentBlockSelection.Position).ToLower());
-                        }
-                        else if (block.BlockMaterial == EnumBlockMaterial.Air)
-                        {
-                            stringBuilder.Append("into thin air");
+                            message = string.Format("{0} points at {1}", player.PlayerName, targetPlayer.PlayerName);
                         }
                         else
                         {
-                            stringBuilder.Append("at the ground");
-                        }
+                            string entityName = player.CurrentEntitySelection.Entity.GetName().ToLower();
+                            message = string.Format("{0} points at {1}", player.PlayerName, entityName);
 
-                        var distance = player.CurrentBlockSelection.Position.DistanceTo(player.Entity.Pos.X, player.Entity.Pos.Y, player.Entity.Pos.Z);
-
-                        if (distance > 50)
-                        {
-                            stringBuilder.Append(" in the distance");
+                            if (player.CurrentEntitySelection.Entity.Pos.DistanceTo(player.Entity.Pos.XYZ) > 20)
+                            {
+                                message += " in the distance";
+                            }
+                            else if (player.CurrentEntitySelection.Entity.Pos.DistanceTo(player.Entity.Pos.XYZ) > 10)
+                            {
+                                message += " nearby";
+                            }
                         }
-                        else if (distance > 20)
-                        {
-                            stringBuilder.Append(" nearby");
-                        }
-
-                        message = stringBuilder.ToString();
                     }
-                }
-                else
-                {
-                    return;
-                }
+                    else if (player.CurrentBlockSelection != null)
+                    {
+                        Block block = api.World.BlockAccessor.GetBlockOrNull(player.CurrentBlockSelection.Position.X, player.CurrentBlockSelection.Position.Y, player.CurrentBlockSelection.Position.Z);
+                        BlockEntity blockEntity = api.World.BlockAccessor.GetBlockEntity(player.CurrentBlockSelection.Position);
 
-                api.SendMessage(player, groupId, config.GetPrefix() + message, config.GetChatEnumType());
-            };
+                        if (block == null && blockEntity == null)
+                        {
+                            //neither a block or an entity
+                            message = string.Format("{0} points in front of them", player.PlayerName);
+                        }
+                        else if (blockEntity != null)
+                        {
+                            //block entity (chest, cooking pot etc)
+                            message = string.Format("{0} points at the {1}", player.PlayerName, blockEntity.Block.GetPlacedBlockName(api.World, player.CurrentBlockSelection.Position).ToLower());
+                        }
+                        else if (block != null)
+                        {
+                            //normal block
+                            StringBuilder stringBuilder = new StringBuilder();
 
-            api.RegisterCommand(point);
+                            stringBuilder.Append(string.Format("{0} points ", player.PlayerName));
+
+                            EnumBlockMaterial[] groundMaterials = new EnumBlockMaterial[]
+                            {
+                                EnumBlockMaterial.Air,
+                                EnumBlockMaterial.Gravel,
+                                EnumBlockMaterial.Leaves,
+                                EnumBlockMaterial.Ice,
+                                EnumBlockMaterial.Sand,
+                                EnumBlockMaterial.Snow,
+                                EnumBlockMaterial.Soil,
+                                EnumBlockMaterial.Stone,
+                                EnumBlockMaterial.Wood
+                            };
+
+                            if (!groundMaterials.Contains(block.BlockMaterial))
+                            {
+                                stringBuilder.Append("at " + block.GetPlacedBlockName(api.World, player.CurrentBlockSelection.Position).ToLower());
+                            }
+                            else if (block.BlockMaterial == EnumBlockMaterial.Air)
+                            {
+                                stringBuilder.Append("into thin air");
+                            }
+                            else
+                            {
+                                stringBuilder.Append("at the ground");
+                            }
+
+                            var distance = player.CurrentBlockSelection.Position.DistanceTo(player.Entity.Pos.X, player.Entity.Pos.Y, player.Entity.Pos.Z);
+
+                            if (distance > 50)
+                            {
+                                stringBuilder.Append(" in the distance");
+                            }
+                            else if (distance > 20)
+                            {
+                                stringBuilder.Append(" nearby");
+                            }
+
+                            message = stringBuilder.ToString();
+                        }
+                    }
+                    else
+                    {
+                        return TextCommandResult.Error("There seems to be nothing there");
+                    }
+
+                    api.SendMessage(player, groupId, config.GetPrefix() + message, config.GetChatEnumType());
+                    return TextCommandResult.Success();
+                });
         }
         #endregion
 
@@ -155,40 +154,38 @@ namespace CandidEmotions
             //Add custom actions as commands with respective handlers
             foreach (string action in allActions.Distinct())
             {
-                ServerChatCommand cmd = new ServerChatCommand()
-                {
-                    Command = action,
-                    Description = string.Format("Virtually {0}s another player", action),
-                    Syntax = action + " [player]"
-                };
-
-                cmd.handler = GetHandlerDelegate(api, action);
-                api.RegisterCommand(cmd);
+                api.ChatCommands.Create()
+                    .WithName(action)
+                    .RequiresPrivilege(Privilege.chat)
+                    .RequiresPlayer()
+                    .WithDescription(string.Format("Virtually {0}{1} another player", action, action.EndsWith("s") ? "" : "s"))
+                    .WithExamples(new string[] { action + " [player]" })
+                    .HandleWith(GetHandlerDelegate(api, action));
             }
 
             //Add the /me command and handler
-            ServerChatCommand me = new ServerChatCommand()
-            {
-                Command = "me",
-                Description = "Virtually performs an action",
-                Syntax = "me [action]"
-            };
-
-            me.handler = GetMeHandler(api);
-            api.RegisterCommand(me);
+            api.ChatCommands.Create()
+                .WithName("me")
+                .RequiresPrivilege(Privilege.chat)
+                .RequiresPlayer()
+                .WithDescription("Virtually performs an action")
+                .WithExamples(new string[] { "me [action]" })
+                .HandleWith(GetMeHandler(api));
         }
 
-        private ServerChatCommandDelegate GetMeHandler(ICoreServerAPI api)
+        private OnCommandDelegate GetMeHandler(ICoreServerAPI api)
         {
-            return delegate (IServerPlayer player, int groupId, CmdArgs args) {
-                string action = args.PopAll().Trim();
+            return delegate (TextCommandCallingArgs args) {
+                string action = args.RawArgs.PopAll();
+                var player = args.Caller.Player;
+                var groupId = args.Caller.FromChatGroupId;
+
 
                 corrector.Refresh(api);
 
                 if (action.Length == 0)
                 {
-                    api.SendMessage(player, groupId, "Need to provide an action", EnumChatType.Notification);
-                    return;
+                    return TextCommandResult.Error("Need to provide an action");
                 }
 
                 //Replace placeholder and autocorrect if applicable
@@ -200,10 +197,11 @@ namespace CandidEmotions
                 { 
                     action = RequestAutoCorrection(action, nearestPlayer);
                     api.SendMessageToGroup(groupId, config.GetPrefix() + player.PlayerName + " " + action, config.GetChatEnumType());
+                    return TextCommandResult.Success();
                 }
                 catch (NoPlayerNearbyException)
                 {
-                    api.SendMessage(player, groupId, "There is no one here right now", EnumChatType.Notification);
+                    return TextCommandResult.Error("There is no one here right now");
                 }
             };
         }
@@ -213,11 +211,14 @@ namespace CandidEmotions
             api.Logger.Error("(CandidEmotions) " + v);
         }
 
-        private ServerChatCommandDelegate GetHandlerDelegate(ICoreServerAPI api, string action)
+        private OnCommandDelegate GetHandlerDelegate(ICoreServerAPI api, string action)
         {
-            return delegate (IServerPlayer player, int groupId, CmdArgs args) {
-                string otherPlayerName = args.PopAll().Trim();
+            return delegate (TextCommandCallingArgs args) {
+                IPlayer player = args.Caller.Player;
+                int groupId = args.Caller.FromChatGroupId;
+                string otherPlayerName = args.RawArgs.PopAll();
                 string message = "";
+
                 IPlayer nearestPlayer = Utils.FindNearestPlayer(api, config, player);
                 IPlayer[] allPlayers = api.World.AllPlayers;
 
@@ -242,23 +243,24 @@ namespace CandidEmotions
                         {
                             api.SendMessage(player, groupId, string.Format("There is no one around, so you {0} yourself", action), EnumChatType.Notification);
                         }
-                        return;
+                        return TextCommandResult.Success();
                     }
                 }
                 else
                 {
                     //perform action on specified player
-                    message = string.Format("{0} hugs {1}", player.PlayerName, args.PopAll());
+                    message = string.Format("{0} hugs {1}", player.PlayerName, otherPlayerName);
                 }
 
                 try
                 {
                     message = RequestAutoCorrection(message, nearestPlayer);
                     api.SendMessageToGroup(groupId, config.GetPrefix() + message, config.GetChatEnumType());
+                    return TextCommandResult.Success();
                 }
                 catch (NoPlayerNearbyException)
                 {
-                    api.SendMessage(player, groupId, "There is no one here right now", EnumChatType.Notification);
+                    return TextCommandResult.Error("There is no one here right now");
                 }
             };
         }
