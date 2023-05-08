@@ -158,8 +158,8 @@ namespace CandidEmotions
                     .WithName(action)
                     .RequiresPrivilege(Privilege.chat)
                     .RequiresPlayer()
+                    .WithArgs(api.ChatCommands.Parsers.OptionalPlayerUids("player"))
                     .WithDescription(string.Format("Virtually {0}{1} another player", action, action.EndsWith("s") ? "" : "s"))
-                    .WithExamples(new string[] { action + " [player]" })
                     .HandleWith(GetHandlerDelegate(api, action));
             }
 
@@ -167,16 +167,17 @@ namespace CandidEmotions
             api.ChatCommands.Create()
                 .WithName("me")
                 .RequiresPrivilege(Privilege.chat)
+                .WithArgs(api.ChatCommands.Parsers.All("action"))
                 .RequiresPlayer()
                 .WithDescription("Virtually performs an action")
-                .WithExamples(new string[] { "me [action]" })
+                .WithExamples(new string[] { "/me ponders" })
                 .HandleWith(GetMeHandler(api));
         }
 
         private OnCommandDelegate GetMeHandler(ICoreServerAPI api)
         {
             return delegate (TextCommandCallingArgs args) {
-                string action = args.RawArgs.PopAll();
+                string action = (string)args.Parsers[0].GetValue();
                 var player = args.Caller.Player;
                 var groupId = args.Caller.FromChatGroupId;
 
@@ -216,7 +217,19 @@ namespace CandidEmotions
             return delegate (TextCommandCallingArgs args) {
                 IPlayer player = args.Caller.Player;
                 int groupId = args.Caller.FromChatGroupId;
-                string otherPlayerName = args.RawArgs.PopAll();
+                string otherPlayerName = "";
+
+                if (!args.Parsers[0].IsMissing)
+                {
+                    if (args.Parsers[0].GetValue() is PlayerUidName)
+                    {
+                        otherPlayerName = ((PlayerUidName)args.Parsers[0].GetValue()).Name;
+                    }
+                    else if (args.Parsers[0].GetValue() is PlayerUidName[])
+                    {
+                        otherPlayerName = string.Join(", ", ((PlayerUidName[])args.Parsers[0].GetValue()).Select(p => p.Name));
+                    }
+                }
                 string message = "";
 
                 IPlayer nearestPlayer = Utils.FindNearestPlayer(api, config, player);
